@@ -7,35 +7,25 @@ datasource db {
   provider = "sqlserver"
 }
 
-
 model fm_c_shipment {
-  sh_cmp_seq     Int
-  sh_code        String    @db.VarChar(10)
+  sh_cmp_seq   Int
+  sh_code      String    @db.VarChar(10)
 
-  sh_ets         DateTime? @db.DateTime
-  sh_eta         DateTime? @db.DateTime
-  sh_fwd_agent   String?   @db.VarChar(50)
+  sh_ets       DateTime? @db.DateTime
+  sh_eta       DateTime? @db.DateTime
+  sh_fwd_agent String?   @db.VarChar(50)
 
-  sh_docdate     DateTime? @db.DateTime
-  sh_ss_code     String?   @db.Char(3)
-  sh_bri         String?   @db.VarChar(15)
-  sh_pip         String?   @db.VarChar(15)
+  sh_docdate   DateTime? @db.DateTime
+  sh_ss_code   String?   @db.Char(3)
+  sh_bri       String?   @db.VarChar(15)
+  sh_pip       String?   @db.VarChar(15)
 
-  im_shstatus      im_shstatus?
-    @relation(
-      fields: [sh_ss_code, sh_cmp_seq],
-      references: [ss_code, ss_cmp_seq],
-      onUpdate: NoAction,
-      map: "fk_shipment_shstatus"
-    )
-
+  im_shstatus      im_shstatus?      @relation(fields: [sh_ss_code, sh_cmp_seq], references: [ss_code, ss_cmp_seq], onUpdate: NoAction, map: "fk_shipment_shstatus")
   fm_c_shipmentudf fm_c_shipmentudf?
-
   it_trans_a       it_trans_a[]
 
   @@id([sh_cmp_seq, sh_code], map: "PK_shipment", clustered: false)
 }
-
 
 model fm_c_shipmentudf {
   fk_sh_code String  @db.VarChar(10)
@@ -45,44 +35,30 @@ model fm_c_shipmentudf {
   udf10      String? @db.VarChar(15)
   udf13      String? @db.VarChar(2500)
 
-  fm_c_shipment fm_c_shipment
-    @relation(
-      fields: [fk_cmp_seq, fk_sh_code],
-      references: [sh_cmp_seq, sh_code],
-      onUpdate: NoAction,
-      map: "fk_fm_c_shipmentudf"
-    )
+  fm_c_shipment fm_c_shipment @relation(fields: [fk_cmp_seq, fk_sh_code], references: [sh_cmp_seq, sh_code], onUpdate: NoAction, map: "fk_fm_c_shipmentudf")
 
   @@id([fk_cmp_seq, fk_sh_code], map: "pk_fm_c_shipmentudf")
 }
-
 
 model im_shstatus {
   ss_code        String @db.Char(3)
   ss_cmp_seq     Int
   ss_description String @db.VarChar(50)
 
-  fm_c_shipment  fm_c_shipment[]
+  fm_c_shipment fm_c_shipment[]
 
   @@id([ss_code, ss_cmp_seq], map: "pk_im_shstatus")
 }
 
 model it_trans_a {
-  tra_cmp_seq      Int
-  tra_ref_id       Decimal @db.Decimal(10, 0)
-  tra_ref_type     Int
+  tra_cmp_seq     Int
+  tra_ref_id      Decimal @db.Decimal(10, 0)
+  tra_ref_type    Int
 
-  tra_shipment     String? @db.VarChar(10)
-  tra_acc_cmp_seq  Int?
+  tra_shipment    String? @db.VarChar(10)
+  tra_acc_cmp_seq Int?
 
-  fm_c_shipment fm_c_shipment?
-    @relation(
-      fields: [tra_acc_cmp_seq, tra_shipment],
-      references: [sh_cmp_seq, sh_code],
-      onDelete: NoAction,
-      onUpdate: NoAction,
-      map: "FK_it_trans_a_fm_c_shipment"
-    )
+  fm_c_shipment fm_c_shipment? @relation(fields: [tra_acc_cmp_seq, tra_shipment], references: [sh_cmp_seq, sh_code], onDelete: NoAction, onUpdate: NoAction, map: "FK_it_trans_a_fm_c_shipment")
 
   @@id([tra_cmp_seq, tra_ref_id, tra_ref_type], map: "PK_it_trans_a")
 }
@@ -98,12 +74,8 @@ model it_trans_b {
   trb_s_qt         Decimal? @db.Decimal(18, 3)
 
   @@index([trb_ia_item_id], map: "IX_it_trans_b_iaid")
-  @@index(
-    [trb_cmp_seq, trb_tra_ref_type, trb_tra_ref_id],
-    map: "IX_it_trans_b_tra"
-  )
+  @@index([trb_cmp_seq, trb_tra_ref_type, trb_tra_ref_id], map: "IX_it_trans_b_tra")
 }
-
 
 model im_itema {
   ia_item_id   Decimal @id(map: "PK_im_itema_1__22") @db.Decimal(10, 0)
