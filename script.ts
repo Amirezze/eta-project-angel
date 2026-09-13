@@ -1,8 +1,7 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./src/lib/prisma";
 
-async function main(){
-
- const shipment = await prisma.fm_c_shipment.findUnique({
+async function main() {
+  const shipment = await prisma.fm_c_shipment.findUnique({
     where: {
       sh_cmp_seq_sh_code: {
         sh_cmp_seq: 16,
@@ -12,15 +11,15 @@ async function main(){
     include: {
       im_shstatus: true,
       fm_c_shipmentudf: true,
-      },
+    },
   });
 
   const gsn = await prisma.it_trans_a.findFirst({
-  where: {
-    tra_shipment: "FO04/26-04",
-    tra_ref_type: 22,
-  },
-});
+    where: {
+      tra_shipment: "FO04/26-04",
+      tra_ref_type: 22,
+    },
+  });
 
   console.log("Shipment:", shipment);
   console.log("GSN:", gsn);
