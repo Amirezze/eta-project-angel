@@ -40,9 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-src/app/generated/prisma
+generated/
 .claude/
 .agents/
 .windsurf/
 skills-lock.json
-prisma/schemacopy.prisma

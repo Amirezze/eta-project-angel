@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/app-prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+model TrackingCheck {
+  trackingId     String    @id @default(uuid()) @db.UniqueIdentifier @map("tracking_id")
+
+  shipmentCode   String    @db.VarChar(10) @map("shipment_code")
+  shipmentCmpSeq Int       @map("shipment_cmp_seq")
+
+  checkedAt      DateTime  @default(now()) @db.DateTime @map("checked_at")
+
+  returnedEta    DateTime? @db.Date @map("returned_eta")
+  returnedStatus String?   @db.VarChar(50) @map("returned_status")
+
+  success        Boolean
+
+  triggerSource  String?   @db.VarChar(20) @map("trigger_source")
+  errorType      String?   @db.VarChar(50) @map("error_type")
+  errorMessage   String?   @db.VarChar(1000) @map("error_message")
+
+  @@index([shipmentCode, shipmentCmpSeq])
+  @@map("Tracking_Check")
+}
+
+model ShipmentDocumentStatus {
+  documentStatusId String   @id @default(uuid()) @db.UniqueIdentifier @map("document_status_id")
+
+  shipmentCode     String   @db.VarChar(10) @map("shipment_code")
+  shipmentCmpSeq   Int      @map("shipment_cmp_seq")
+
+  documentType     String   @db.VarChar(50) @map("document_type")
+  isMissing        Boolean  @map("is_missing")
+
+  checkedAt        DateTime @default(now()) @db.DateTime @map("checked_at")
+
+  @@index([shipmentCode, shipmentCmpSeq])
+  @@map("Shipment_Document_Status")
+}
+
+
