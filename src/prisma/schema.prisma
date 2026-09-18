@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../../generated/prisma"
 }
 
 datasource db {
@@ -16,6 +16,7 @@ model fm_c_shipment {
   sh_fwd_agent String?   @db.VarChar(50)
 
   sh_docdate   DateTime? @db.DateTime
+  sh_despacte String? @db.VarChar(50)
   sh_ss_code   String?   @db.Char(3)
   sh_bri       String?   @db.VarChar(15)
   sh_pip       String?   @db.VarChar(15)

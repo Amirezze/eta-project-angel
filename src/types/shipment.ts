@@ -3,6 +3,7 @@ export interface Shipment {
   shipmentCmpSeq: number;
   status: string | null;
   eta: Date | null;
+  billOfLading: string | null;
   departureDate: Date | null;
   forwardingAgent: string | null;
   transmissionDate: Date | null;

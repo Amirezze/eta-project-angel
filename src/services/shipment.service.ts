@@ -27,6 +27,7 @@ export async function fetchShipment(
     status: shipment.im_shstatus?.ss_description ?? null,
     eta: shipment.sh_eta ?? null,
     departureDate: shipment.sh_ets ?? null,
+    billOfLading: shipment.sh_despacte ?? null,
     forwardingAgent: shipment.sh_fwd_agent ?? null,
     transmissionDate: shipment.sh_docdate ?? null,
     licenceNumber: shipment.sh_bri ?? null,
