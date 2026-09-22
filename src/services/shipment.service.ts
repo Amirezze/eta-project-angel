@@ -9,7 +9,7 @@ const SHIPPING_LINE_MAP: Record<string, string | null> = {
   "6": "MSC",
 };
 
-export async function fetchShipment(
+export async function getShipment(
   sh_cmp_seq: number,
   sh_code: string,
 ): Promise<Shipment | null> {
@@ -41,3 +41,6 @@ export async function fetchShipment(
 
   return mappedShipment;
 }
+
+
+
