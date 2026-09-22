@@ -1,5 +1,5 @@
 import { getTrackingChecksByShipment } from "@/data/tracking-check.repository";
-import { getShipmentById } from "../data/shipment.repository";
+import { getShipmentById } from "@/data/shipment.repository";
 
 
 export async function fetchTrackingChecksByShipment(shipmentCmpSeq: number, shipmentCode: string) {
