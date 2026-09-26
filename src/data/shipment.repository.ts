@@ -16,3 +16,4 @@ export async function getShipmentById(sh_cmp_seq: number, sh_code: string) {
 
   return shipment;
 }
+

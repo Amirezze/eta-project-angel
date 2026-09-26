@@ -1,0 +1,1712 @@
+openapi: 3.0.3
+
+
+
+info:
+
+  title: Shipment Tracking API
+
+  description: >
+
+    API for displaying arrived shipments, tracking containers,
+
+    updating shipment tracking information, viewing histories,
+
+    exporting arrival information, and managing tracking runs.
+
+  version: 1.0.0
+
+
+
+servers:
+
+  - url: http\://localhost:3000/api
+
+    description: Local Development Server
+
+
+
+tags:
+
+  - name: Shipments
+
+    description: Shipment dashboard, history, update, and export operations
+
+
+
+  - name: Tracking
+
+    description: Container tracking and tracking-run operations
+
+
+
+paths:
+
+
+
+  # ================================================================
+
+  # SHIPMENTS
+
+  # ================================================================
+
+
+
+  /shipments/arrived:
+
+    get:
+
+      tags:
+
+        - Shipments
+
+      summary: Get all arrived shipments
+
+      description: >
+
+        Returns all shipments whose status is Arrived for display
+
+        on the arrival dashboard.
+
+      operationId: getArrivedShipments
+
+
+
+      responses:
+
+        "200":
+
+          description: Arrived shipments retrieved successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ArrivedShipmentResponse"
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  /shipments/arrived/export:
+
+    get:
+
+      tags:
+
+        - Shipments
+
+      summary: Export arrival summary
+
+      description: >
+
+        Exports the important shipment information displayed
+
+        on the arrival dashboard as an Excel file.
+
+      operationId: exportArrivalSummary
+
+
+
+      responses:
+
+        "200":
+
+          description: Excel file generated successfully
+
+          headers:
+
+            Content-Disposition:
+
+              description: Suggested filename for the exported file
+
+              schema:
+
+                type: string
+
+                example: attachment; filename="ArrivalSummary.xlsx"
+
+
+
+          content:
+
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+
+              schema:
+
+                type: string
+
+                format: binary
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  /shipments/{shipmentCode}/{shipmentCmpSeq}/tracking-history:
+    get:
+      tags:
+        - Shipments
+      summary: Get shipment tracking history
+      description: >
+        Returns all tracking checks for one shipment,
+        identified by shipment code and company sequence,
+        ordered from newest to oldest.
+      operationId: getShipmentTrackingHistory
+
+      parameters:
+        - $ref: "#/components/parameters/ShipmentCode"
+        - $ref: "#/components/parameters/ShipmentCmpSeq"
+
+      responses:
+        "200":
+          description: Tracking history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrackingHistoryResponse"
+
+        "400":
+          description: Invalid shipment parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                message: shipmentCmpSeq must be an integer
+
+        "404":
+          $ref: "#/components/responses/ShipmentNotFound"
+
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /shipments/{shipmentCode}/{shipmentCmpSeq}/document-history:
+
+    get:
+
+      tags:
+
+        - Shipments
+
+      summary: Get shipment document history
+
+      description: >
+
+        Returns the document status history for one shipment,
+
+        identified by shipment code and company sequence,
+
+        ordered from newest to oldest.
+
+      operationId: getShipmentDocumentHistory
+
+
+
+      parameters:
+
+        - $ref: "#/components/parameters/ShipmentCode"
+
+        - $ref: "#/components/parameters/ShipmentCmpSeq"
+
+
+
+      responses:
+
+        "200":
+
+          description: Document history retrieved successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/DocumentHistoryResponse"
+
+
+
+        "404":
+
+          $ref: "#/components/responses/ShipmentNotFound"
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  /shipments/{shipmentCode}/{shipmentCmpSeq}:
+
+    patch:
+
+      tags:
+
+        - Shipments
+
+      summary: Update shipment tracking information
+
+      description: >
+
+        Updates tracking-related shipment fields such as ETA and status.
+
+        The shipment is identified using shipmentCode and shipmentCmpSeq.
+
+        This endpoint does not update unrelated shipment information.
+
+      operationId: updateShipmentTrackingInformation
+
+
+
+      parameters:
+
+        - $ref: "#/components/parameters/ShipmentCode"
+
+        - $ref: "#/components/parameters/ShipmentCmpSeq"
+
+
+
+      requestBody:
+
+        required: true
+
+        content:
+
+          application/json:
+
+            schema:
+
+              $ref: "#/components/schemas/UpdateShipmentTrackingRequest"
+
+
+
+            examples:
+
+              updateEtaAndStatus:
+
+                summary: Update ETA and status
+
+                value:
+
+                  eta: "2026-08-05"
+
+                  status: Shipped
+
+
+
+              updateStatusOnly:
+
+                summary: Update only the shipment status
+
+                value:
+
+                  status: Arrived
+
+
+
+      responses:
+
+        "200":
+
+          description: Shipment tracking information updated successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/UpdateShipmentResponse"
+
+
+
+        "400":
+
+          $ref: "#/components/responses/BadRequest"
+
+
+
+        "404":
+
+          $ref: "#/components/responses/ShipmentNotFound"
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  # ================================================================
+
+  # INDIVIDUAL TRACKING OPERATIONS
+
+  # ================================================================
+
+
+
+  /tracking/shipments:
+
+    get:
+
+      tags:
+
+        - Tracking
+
+      summary: Get shipments eligible for tracking
+
+      description: >
+
+        Returns shipments that meet the conditions required
+
+        for container tracking.
+
+      operationId: getEligibleShipmentsForTracking
+
+
+
+      responses:
+
+        "200":
+
+          description: Eligible shipments retrieved successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/EligibleShipmentResponse"
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  /tracking/{shipmentCode}/{shipmentCmpSeq}:
+
+    post:
+
+      tags:
+
+        - Tracking
+
+      summary: Track one shipment
+
+      description: >
+
+        Tracks one shipment using its container number.
+
+        The shipment is identified using shipmentCode and shipmentCmpSeq.
+
+        The backend calls the external JSONCargo service and returns
+
+        the latest tracking result.
+
+      operationId: trackShipment
+
+
+
+      parameters:
+
+        - $ref: "#/components/parameters/ShipmentCode"
+
+        - $ref: "#/components/parameters/ShipmentCmpSeq"
+
+
+
+      responses:
+
+        "200":
+
+          description: Shipment tracked successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ContainerTrackingResult"
+
+
+
+        "400":
+
+          description: Shipment cannot be tracked
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ErrorResponse"
+
+              example:
+
+                message: The shipment does not have a valid container number
+
+
+
+        "404":
+
+          $ref: "#/components/responses/ShipmentNotFound"
+
+
+
+        "502":
+
+          description: External tracking service error
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ErrorResponse"
+
+              example:
+
+                message: The container tracking service is unavailable
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  # ================================================================
+
+  # COMPLETE TRACKING RUNS
+
+  # ================================================================
+
+
+
+  /tracking-runs:
+
+    post:
+
+      tags:
+
+        - Tracking
+
+      summary: Start a complete tracking run
+
+      description: >
+
+        Starts a background tracking process. The process retrieves
+
+        eligible shipments, tracks each container through the external
+
+        tracking service, records the tracking checks, and updates
+
+        shipment ETA and status. A failure for one shipment does not
+
+        stop the remaining shipments from being processed.
+
+      operationId: startTrackingRun
+
+
+
+      responses:
+
+        "202":
+
+          description: Tracking run accepted and started
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/StartTrackingRunResponse"
+
+
+
+        "409":
+
+          description: Another tracking run is already active
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ErrorResponse"
+
+              example:
+
+                message: A tracking run is already in progress
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+  /tracking-runs/{runId}:
+
+    get:
+
+      tags:
+
+        - Tracking
+
+      summary: Get tracking run status
+
+      description: >
+
+        Returns the progress and result of a specific tracking run.
+
+      operationId: getTrackingRunStatus
+
+
+
+      parameters:
+
+        - $ref: "#/components/parameters/TrackingRunId"
+
+
+
+      responses:
+
+        "200":
+
+          description: Tracking run retrieved successfully
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/TrackingRun"
+
+
+
+        "404":
+
+          description: Tracking run not found
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ErrorResponse"
+
+              example:
+
+                message: Tracking run not found
+
+
+
+        "500":
+
+          $ref: "#/components/responses/InternalServerError"
+
+
+
+components:
+
+
+
+  # ================================================================
+
+  # PARAMETERS
+
+  # ================================================================
+
+
+
+  parameters:
+
+
+
+    ShipmentCode:
+
+      name: shipmentCode
+
+      in: path
+
+      required: true
+
+      description: >
+
+        Shipment code, percent-encoded in the URL so the "/" is preserved.
+
+        For example, FO04/26-06 is sent as FO04%2F26-06.
+
+        The schema below describes the decoded value.
+
+      schema:
+
+        type: string
+
+        pattern: "^[A-Za-z0-9/-]+$"
+
+      example: FO04/26-06
+
+
+
+    ShipmentCmpSeq:
+
+      name: shipmentCmpSeq
+
+      in: path
+
+      required: true
+
+      description: >
+
+        Company sequence used together with shipmentCode
+
+        to uniquely identify a shipment.
+
+      schema:
+
+        type: integer
+
+      example: 4
+
+
+
+    TrackingRunId:
+
+      name: runId
+
+      in: path
+
+      required: true
+
+      description: Unique tracking-run identifier
+
+      schema:
+
+        type: string
+
+      example: tr_20260731_001
+
+
+
+  # ================================================================
+
+  # REUSABLE RESPONSES
+
+  # ================================================================
+
+
+
+  responses:
+
+
+
+    BadRequest:
+
+      description: Invalid request
+
+      content:
+
+        application/json:
+
+          schema:
+
+            $ref: "#/components/schemas/ErrorResponse"
+
+          example:
+
+            message: At least one tracking field must be provided
+
+
+
+    ShipmentNotFound:
+
+      description: Shipment not found
+
+      content:
+
+        application/json:
+
+          schema:
+
+            $ref: "#/components/schemas/ErrorResponse"
+
+          example:
+
+            message: Shipment not found
+
+
+
+    InternalServerError:
+
+      description: Internal server error
+
+      content:
+
+        application/json:
+
+          schema:
+
+            $ref: "#/components/schemas/ErrorResponse"
+
+          example:
+
+            message: An unexpected error occurred
+
+
+
+  # ================================================================
+
+  # SCHEMAS
+
+  # ================================================================
+
+
+
+  schemas:
+
+
+
+    ErrorResponse:
+
+      type: object
+
+      required:
+
+        - message
+
+      properties:
+
+        message:
+
+          type: string
+
+          example: An unexpected error occurred
+
+
+
+    # ==============================================================
+
+    # ARRIVED SHIPMENTS
+
+    # ==============================================================
+
+
+
+    ArrivedShipmentResponse:
+
+      type: object
+
+      required:
+
+        - data
+
+        - total
+
+      properties:
+
+        data:
+
+          type: array
+
+          items:
+
+            $ref: "#/components/schemas/ArrivedShipment"
+
+
+
+        total:
+
+          type: integer
+
+          minimum: 0
+
+          example: 1
+
+
+
+    ArrivedShipment:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+        - companyName
+
+        - items
+
+        - documentStatus
+
+        - missingDocuments
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: FO04/26-06
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 4
+
+
+
+        companyName:
+
+          type: string
+
+          example: Foodlife
+
+
+
+        items:
+
+          type: array
+
+          items:
+
+            type: string
+
+          example:
+
+            - Sunflower Oil
+
+            - Tomato Paste
+
+
+
+        forwardingAgent:
+
+          type: string
+
+          nullable: true
+
+          example: MEGA
+
+
+
+        etd:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-06-10"
+
+
+
+        eta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-08-05"
+
+
+
+        containerNumber:
+
+          type: string
+
+          nullable: true
+
+          example: MEDU1234567
+
+
+
+        shippingLine:
+
+          type: string
+
+          nullable: true
+
+          example: MSC
+
+
+
+        documentStatus:
+
+          $ref: "#/components/schemas/DocumentStatus"
+
+
+
+        missingDocuments:
+
+          type: array
+
+          description: Empty when no documents are missing
+
+          items:
+
+            type: string
+
+          example:
+
+            - Original BL
+
+            - AV
+
+
+
+    # ==============================================================
+
+    # TRACKING HISTORY
+
+    # ==============================================================
+
+
+
+    TrackingHistoryResponse:
+      type: object
+      required:
+        - data
+        - total
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrackingCheck"
+
+        total:
+          type: integer
+          minimum: 0
+          example: 2
+
+    TrackingCheck:
+      type: object
+      required:
+        - checkedAt
+        - success
+      properties:
+        checkedAt:
+          type: string
+          format: date-time
+          example: "2026-07-29T09:30:00Z"
+
+        returnedEta:
+          type: string
+          format: date
+          nullable: true
+          example: "2026-08-03"
+
+        returnedStatus:
+          type: string
+          nullable: true
+          example: Arrived at Matadi
+
+        success:
+          type: boolean
+          example: true
+
+        triggerSource:
+          type: string
+          nullable: true
+          description: >
+            Indicates how the tracking check was triggered.
+            Scheduled means it was triggered by a tracking run.
+            Manual means it was triggered through the individual
+            tracking endpoint.
+          enum:
+            - Scheduled
+            - Manual
+          example: Scheduled
+
+        errorType:
+          type: string
+          nullable: true
+          example: null
+
+        errorMessage:
+          type: string
+          nullable: true
+          example: null
+
+    # ==============================================================
+
+    # DOCUMENT HISTORY
+
+    # ==============================================================
+
+
+
+    DocumentHistoryResponse:
+
+      type: object
+
+      required:
+
+        - data
+
+        - total
+
+      properties:
+
+        data:
+
+          type: array
+
+          items:
+
+            $ref: "#/components/schemas/DocumentStatusCheck"
+
+
+
+        total:
+
+          type: integer
+
+          minimum: 0
+
+          example: 2
+
+
+
+    DocumentStatusCheck:
+
+      type: object
+
+      required:
+
+        - checkedAt
+
+        - documentStatus
+
+        - missingDocuments
+
+      properties:
+
+        checkedAt:
+
+          type: string
+
+          format: date-time
+
+          example: "2026-07-29T09:30:00Z"
+
+
+
+        documentStatus:
+
+          $ref: "#/components/schemas/DocumentStatus"
+
+
+
+        missingDocuments:
+
+          type: array
+
+          description: Empty when the document status is OK
+
+          items:
+
+            type: string
+
+          example:
+
+            - Original BL
+
+            - AV
+
+
+
+    DocumentStatus:
+
+      type: string
+
+      enum:
+
+        - OK
+
+        - Missing Documents
+
+      example: Missing Documents
+
+
+
+    # ==============================================================
+
+    # ELIGIBLE SHIPMENTS
+
+    # ==============================================================
+
+
+
+    EligibleShipmentResponse:
+
+      type: object
+
+      required:
+
+        - data
+
+        - total
+
+      properties:
+
+        data:
+
+          type: array
+
+          items:
+
+            $ref: "#/components/schemas/EligibleShipment"
+
+
+
+        total:
+
+          type: integer
+
+          minimum: 0
+
+          example: 2
+
+
+
+    EligibleShipment:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+        - containerNumber
+
+        - shippingLine
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: FO04/26-06
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 4
+
+
+
+        containerNumber:
+
+          type: string
+
+          example: MEDU1234567
+
+
+
+        shippingLine:
+
+          type: string
+
+          example: MSC
+
+
+
+        currentEta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-08-05"
+
+
+
+        currentStatus:
+
+          type: string
+
+          nullable: true
+
+          example: In Transit
+
+
+
+        lastTrackedAt:
+
+          type: string
+
+          format: date-time
+
+          nullable: true
+
+          example: "2026-07-28T09:30:00Z"
+
+
+
+    # ==============================================================
+
+    # TRACK ONE SHIPMENT
+
+    # ==============================================================
+
+
+
+    ContainerTrackingResult:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+        - containerNumber
+
+        - checkedAt
+
+        - success
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: FO04/26-06
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 4
+
+
+
+        containerNumber:
+
+          type: string
+
+          example: MEDU1234567
+
+
+
+        eta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-08-03"
+
+
+
+        status:
+
+          type: string
+
+          nullable: true
+
+          example: Arrived at Matadi
+
+
+
+        checkedAt:
+
+          type: string
+
+          format: date-time
+
+          example: "2026-07-31T10:15:00Z"
+
+
+
+        success:
+
+          type: boolean
+
+          example: true
+
+
+
+        errorMessage:
+
+          type: string
+
+          nullable: true
+
+          example: null
+
+
+
+    # ==============================================================
+
+    # UPDATE SHIPMENT TRACKING INFORMATION
+
+    # ==============================================================
+
+
+
+    UpdateShipmentTrackingRequest:
+
+      type: object
+
+      description: >
+
+        At least one of eta or status must be provided.
+
+        lastTrackedAt is derived from the tracking check history
+
+        and cannot be set through this endpoint.
+
+      minProperties: 1
+
+      additionalProperties: false
+
+      properties:
+
+        eta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-08-03"
+
+
+
+        status:
+
+          type: string
+
+          example: Arrived at Matadi
+
+
+
+    UpdateShipmentResponse:
+
+      type: object
+
+      required:
+
+        - message
+
+        - shipment
+
+      properties:
+
+        message:
+
+          type: string
+
+          example: Shipment tracking information updated successfully
+
+
+
+        shipment:
+
+          $ref: "#/components/schemas/UpdatedShipmentTrackingInformation"
+
+
+
+    UpdatedShipmentTrackingInformation:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: FO04/26-06
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 4
+
+
+
+        eta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-08-03"
+
+
+
+        status:
+
+          type: string
+
+          nullable: true
+
+          example: Arrived at Matadi
+
+
+
+        lastTrackedAt:
+
+          type: string
+
+          format: date-time
+
+          nullable: true
+
+          example: "2026-07-31T10:15:00Z"
+
+
+
+    # ==============================================================
+
+    # TRACKING RUNS
+
+    # ==============================================================
+
+
+
+    StartTrackingRunResponse:
+
+      type: object
+
+      required:
+
+        - runId
+
+        - status
+
+        - message
+
+        - startedAt
+
+      properties:
+
+        runId:
+
+          type: string
+
+          example: tr_20260731_001
+
+
+
+        status:
+
+          $ref: "#/components/schemas/TrackingRunStatus"
+
+
+
+        message:
+
+          type: string
+
+          example: Tracking run started
+
+
+
+        startedAt:
+
+          type: string
+
+          format: date-time
+
+          example: "2026-07-31T09:00:00Z"
+
+
+
+    TrackingRun:
+
+      type: object
+
+      required:
+
+        - runId
+
+        - status
+
+        - total
+
+        - processed
+
+        - successful
+
+        - failed
+
+        - startedAt
+
+      properties:
+
+        runId:
+
+          type: string
+
+          example: tr_20260731_001
+
+
+
+        status:
+
+          $ref: "#/components/schemas/TrackingRunStatus"
+
+
+
+        total:
+
+          type: integer
+
+          minimum: 0
+
+          description: Total number of eligible shipments
+
+          example: 12
+
+
+
+        processed:
+
+          type: integer
+
+          minimum: 0
+
+          description: Number of shipments already processed
+
+          example: 12
+
+
+
+        successful:
+
+          type: integer
+
+          minimum: 0
+
+          description: Number of successful tracking checks
+
+          example: 10
+
+
+
+        failed:
+
+          type: integer
+
+          minimum: 0
+
+          description: Number of failed tracking checks
+
+          example: 2
+
+
+
+        startedAt:
+
+          type: string
+
+          format: date-time
+
+          example: "2026-07-31T09:00:00Z"
+
+
+
+        completedAt:
+
+          type: string
+
+          format: date-time
+
+          nullable: true
+
+          example: "2026-07-31T09:03:20Z"
+
+
+
+        errorMessage:
+
+          type: string
+
+          nullable: true
+
+          description: Error when the complete run fails
+
+          example: null
+
+
+
+    TrackingRunStatus:
+
+      type: string
+
+      enum:
+
+        - Pending
+
+        - Running
+
+        - Completed
+
+        - Failed
+
+      example: Running
