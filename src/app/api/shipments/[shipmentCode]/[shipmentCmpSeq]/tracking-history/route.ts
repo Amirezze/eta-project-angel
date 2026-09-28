@@ -1,14 +1,15 @@
-import { fetchTrackingChecksByShipment } from "@/services/tracking-history.service";
+import { getShipmentTrackingHistory } from "@/services/tracking-history.service";
 import { ShipmentRouteParamsSchema } from "@/validation/shipment-route.schema";
 import { NextResponse } from "next/server";
 
-
 export async function GET(
-    _request: Request,
-    { params }: {
-        params: Promise<{
-        shipmentCode: string;
-        shipmentCmpSeq: string;
+  _request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{
+      shipmentCode: string;
+      shipmentCmpSeq: string;
     }>;
   },
 ) {
@@ -21,17 +22,20 @@ export async function GET(
 
   if (!result.success) {
     return NextResponse.json(
-      {message: "Invalid shipment parameters"},
-      {status: 400}
+      {
+        message:
+          result.error.issues[0]?.message ?? "Invalid shipment parameters",
+      },
+      { status: 400 },
     );
-  } 
+  }
 
   const data = result.data;
 
   try {
-    const checks = await fetchTrackingChecksByShipment(
-      data.shipmentCmpSeq,
+    const checks = await getShipmentTrackingHistory(
       data.shipmentCode,
+      data.shipmentCmpSeq,
     );
 
     if (checks === null) {
@@ -42,13 +46,12 @@ export async function GET(
     }
 
     return NextResponse.json(
-        {
-            data: checks,
-            total: checks.length,
-        },
-        { status: 200 }
+      {
+        data: checks,
+        total: checks.length,
+      },
+      { status: 200 },
     );
-    
   } catch (error) {
     console.error("Failed to retrieve tracking history", error);
     return NextResponse.json(
@@ -57,4 +60,3 @@ export async function GET(
     );
   }
 }
-

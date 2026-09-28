@@ -1,29 +1,25 @@
 import { getTrackingChecksByShipment } from "@/data/tracking-check.repository";
-import { getShipmentById } from "@/data/shipment.repository";
-import type {
-  TrackingHistory,
-} from "@/types/TrackingHistory";
+import { shipmentExists } from "@/data/shipment.repository";
+import type { TrackingCheck, TriggerSource } from "@/types/TrackingCheck";
 
-
-export async function fetchTrackingChecksByShipment(
-  shipmentCmpSeq: number,
+export async function getShipmentTrackingHistory(
   shipmentCode: string,
-): Promise<TrackingHistory[] | null> {
-  const shipment = await getShipmentById(shipmentCmpSeq, shipmentCode);
+  shipmentCmpSeq: number,
+): Promise<TrackingCheck[] | null> {
 
-  if (!shipment) return null;
+  const [exists, trackingChecks] = await Promise.all([
+    shipmentExists(shipmentCode, shipmentCmpSeq),
+    getTrackingChecksByShipment(shipmentCode, shipmentCmpSeq),
+  ]);
 
-  const trackingChecks = await getTrackingChecksByShipment(
-    shipmentCmpSeq,
-    shipmentCode,
-  );
+  if (!exists) return null;
 
   return trackingChecks.map((check) => ({
     checkedAt: check.checkedAt,
-    returnedEta: check.returnedEta,
+    returnedEta: check.returnedEta?.toISOString().slice(0, 10) ?? null,
     returnedStatus: check.returnedStatus,
     success: check.success,
-    triggerSource: check.triggerSource,
+    triggerSource: check.triggerSource as TriggerSource | null,
     errorType: check.errorType,
     errorMessage: check.errorMessage,
   }));

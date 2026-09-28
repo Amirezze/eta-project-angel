@@ -1,5 +1,5 @@
 import { getShipmentById } from "../data/shipment.repository";
-import { Shipment } from "../types/shipment";
+import { Shipment } from "@/types/Shipment";
 
 const SHIPPING_LINE_MAP: Record<string, string | null> = {
   "0": null,

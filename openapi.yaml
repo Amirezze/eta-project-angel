@@ -660,9 +660,9 @@ components:
 
       description: >
 
-        Shipment code, percent-encoded in the URL so the "/" is preserved.
+        Shipment code in the format AAMM/YY-NN, percent-encoded in the URL
 
-        For example, FO04/26-06 is sent as FO04%2F26-06.
+        so the "/" is preserved. For example, FO04/26-06 is sent as FO04%2F26-06.
 
         The schema below describes the decoded value.
 
@@ -670,7 +670,7 @@ components:
 
         type: string
 
-        pattern: "^[A-Za-z0-9/-]+$"
+        pattern: '^[A-Za-z]{2}(0[1-9]|1[0-2])/\d{2}-\d{2}$'
 
       example: FO04/26-06
 
@@ -693,6 +693,8 @@ components:
       schema:
 
         type: integer
+
+        minimum: 1
 
       example: 4
 

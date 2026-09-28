@@ -1,13 +1,13 @@
 import { appPrisma } from "@/lib/prisma-app";
 
 export async function getTrackingChecksByShipment(
-  shipmentCmpSeq: number,
   shipmentCode: string,
+  shipmentCmpSeq: number,
 ) {
   return appPrisma.trackingCheck.findMany({
     where: {
-      shipmentCmpSeq,
       shipmentCode,
+      shipmentCmpSeq,
     },
     orderBy: {
       checkedAt: "desc",
