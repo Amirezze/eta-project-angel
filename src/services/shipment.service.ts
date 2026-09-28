@@ -35,7 +35,7 @@ export async function getShipment(
     containerNumber: shipment.fm_c_shipmentudf?.udf5 ?? null,
     shippingLine: shippingLineCode
       ? (SHIPPING_LINE_MAP[shippingLineCode] ?? null)
-      : null,
+      : null, 
     comments: shipment.fm_c_shipmentudf?.udf13 ?? null,
   };
 
