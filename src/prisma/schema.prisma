@@ -24,6 +24,7 @@ model fm_c_shipment {
   im_shstatus      im_shstatus?      @relation(fields: [sh_ss_code, sh_cmp_seq], references: [ss_code, ss_cmp_seq], onUpdate: NoAction, map: "fk_shipment_shstatus")
   fm_c_shipmentudf fm_c_shipmentudf?
   it_trans_a       it_trans_a[]
+  sdcomp           sdcomp            @relation(fields: [sh_cmp_seq], references: [cmp_seq], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([sh_cmp_seq, sh_code], map: "PK_shipment", clustered: false)
 }
@@ -49,6 +50,13 @@ model im_shstatus {
   fm_c_shipment fm_c_shipment[]
 
   @@id([ss_code, ss_cmp_seq], map: "pk_im_shstatus")
+}
+
+model sdcomp {
+  cmp_seq Int    @id(map: "pk_sdcomp")
+  name1   String @db.VarChar(50)
+
+  fm_c_shipment fm_c_shipment[]
 }
 
 model it_trans_a {
