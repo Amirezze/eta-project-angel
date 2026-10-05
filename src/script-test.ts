@@ -1,7 +1,9 @@
 import { getArrivedShipmentsSummary } from "@/services/arrived-shipment.service";
 
 async function main() {
-  await getArrivedShipmentsSummary();
+  const result = await getArrivedShipmentsSummary();
+  console.log(JSON.stringify(result, null, 2));
+
 }
 
 main()
