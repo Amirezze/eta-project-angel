@@ -45,3 +45,7 @@ generated/
 .agents/
 .windsurf/
 skills-lock.json
+
+# local scratch / test output
+src/script-test.ts
+*.xlsx
