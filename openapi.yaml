@@ -260,11 +260,21 @@ paths:
 
       description: >
 
-        Updates tracking-related shipment fields such as ETA and status.
+        Updates the ETA and/or status of a shipment, identified by
 
-        The shipment is identified using shipmentCode and shipmentCmpSeq.
+        shipmentCode and shipmentCmpSeq. Every other shipment with the
 
-        This endpoint does not update unrelated shipment information.
+        same bill of lading is updated too. Status only moves forward
+
+        (Shipped, then Transit, then Arrived); shipments that are Received,
+
+        Closed or Cancelled are never changed. Shipments on the same
+
+        bill of lading that cannot be updated are skipped and listed
+
+        in the response. This endpoint does not update unrelated
+
+        shipment information.
 
       operationId: updateShipmentTrackingInformation
 
@@ -341,6 +351,24 @@ paths:
         "404":
 
           $ref: "#/components/responses/ShipmentNotFound"
+
+
+
+        "409":
+
+          description: The shipment's status does not allow this update
+
+          content:
+
+            application/json:
+
+              schema:
+
+                $ref: "#/components/schemas/ErrorResponse"
+
+              example:
+
+                message: Shipment is Received and can no longer be updated
 
 
 
@@ -1433,8 +1461,6 @@ components:
 
           format: date
 
-          nullable: true
-
           example: "2026-08-03"
 
 
@@ -1443,7 +1469,15 @@ components:
 
           type: string
 
-          example: Arrived at Matadi
+          enum:
+
+            - Shipped
+
+            - Transit
+
+            - Arrived
+
+          example: Arrived
 
 
 
@@ -1456,6 +1490,10 @@ components:
         - message
 
         - shipment
+
+        - updatedShipments
+
+        - skippedShipments
 
       properties:
 
@@ -1470,6 +1508,30 @@ components:
         shipment:
 
           $ref: "#/components/schemas/UpdatedShipmentTrackingInformation"
+
+
+
+        updatedShipments:
+
+          type: array
+
+          description: Every shipment changed, including the one in the URL
+
+          items:
+
+            $ref: "#/components/schemas/UpdatedShipmentSummary"
+
+
+
+        skippedShipments:
+
+          type: array
+
+          description: Shipments on the same bill of lading that were not changed
+
+          items:
+
+            $ref: "#/components/schemas/SkippedShipment"
 
 
 
@@ -1519,7 +1581,7 @@ components:
 
           nullable: true
 
-          example: Arrived at Matadi
+          example: Arrived
 
 
 
@@ -1532,6 +1594,112 @@ components:
           nullable: true
 
           example: "2026-07-31T10:15:00Z"
+
+
+
+    UpdatedShipmentSummary:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: FO10/24-05
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 16
+
+
+
+        eta:
+
+          type: string
+
+          format: date
+
+          nullable: true
+
+          example: "2026-10-16"
+
+
+
+        status:
+
+          type: string
+
+          nullable: true
+
+          example: Transit
+
+
+
+    SkippedShipment:
+
+      type: object
+
+      required:
+
+        - shipmentCode
+
+        - shipmentCmpSeq
+
+        - reason
+
+      properties:
+
+        shipmentCode:
+
+          type: string
+
+          example: PL10/24-03
+
+
+
+        shipmentCmpSeq:
+
+          type: integer
+
+          example: 2
+
+
+
+        reason:
+
+          type: string
+
+          enum:
+
+            - Locked
+
+            - Backwards
+
+            - StatusNotAvailable
+
+          description: >
+
+            Locked means the shipment is Received, Closed or Cancelled.
+
+            Backwards means the new status is behind the current one.
+
+            StatusNotAvailable means the status does not exist for
+
+            this company in the ERP.
+
+          example: Locked
 
 
 
