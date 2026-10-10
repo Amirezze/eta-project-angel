@@ -1,4 +1,4 @@
-export type SkipReason = "Locked" | "Backwards" | "StatusNotAvailable"
+export type SkipReason = "Locked" | "StatusNotAvailable";
 
 export interface UpdatedShipmentSummary {
     shipmentCode: string;
@@ -9,18 +9,18 @@ export interface UpdatedShipmentSummary {
 
 
 export interface SkippedShipment {
-   shipmentCode: string;
+    shipmentCode: string;
     shipmentCmpSeq: number;
     reason: SkipReason;
 }
 
 
-export interface UpdateShipmentTrackingInformation extends UpdatedShipmentSummary {
+export interface UpdatedShipmentTrackingInformation extends UpdatedShipmentSummary {
     lastTrackedAt: Date | null;
 }
 
 export interface UpdateShipmentResult {
-    shipment: UpdateShipmentTrackingInformation;
-    updatedShipment: UpdatedShipmentSummary[];
+    shipment: UpdatedShipmentTrackingInformation;
+    updatedShipments: UpdatedShipmentSummary[];
     skippedShipments: SkippedShipment[];
 }

@@ -96,3 +96,78 @@ export async function getItemNames(itemIds: im_itema["ia_item_id"][]) {
   return items;
 }
 
+
+export async function getShipmentForUpdate(shipmentCode: string, shipmentCmpSeq: number) {
+  return prisma.fm_c_shipment.findUnique({
+    where: { sh_cmp_seq_sh_code: { sh_cmp_seq: shipmentCmpSeq, sh_code: shipmentCode } },
+    select: { sh_code: true, sh_cmp_seq: true, sh_despacte: true, sh_ss_code: true, sh_eta: true },
+  });
+}
+
+
+export async function getShipmentsByBillOfLading(billOfLading: string) {
+  return prisma.fm_c_shipment.findMany({
+    where: { sh_despacte: billOfLading },
+    select: { sh_code: true, sh_cmp_seq: true, sh_ss_code: true, sh_eta: true },
+  });
+}
+
+export async function getStatusesForCompanies(cmpSeqs: number[]) {
+  if (cmpSeqs.length === 0) return [];
+
+  return prisma.im_shstatus.findMany({
+    where: { ss_cmp_seq: { in: cmpSeqs } },
+    select: { ss_code: true, ss_cmp_seq: true, ss_description: true },
+  });
+}
+
+type ShipmentToUpdate = {
+  shipmentCode: string;
+  shipmentCmpSeq: number;
+  currentStatusCode: string | null;
+  newStatusCode?: string;
+};
+
+
+type TrackingChanges = {
+  eta?: Date;
+};
+
+class ShipmentChangedError extends Error { }
+
+export async function updateShipmentTracking(
+  shipments: ShipmentToUpdate[],
+  changes: TrackingChanges,
+) {
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const s of shipments) {
+        const result = await tx.fm_c_shipment.updateMany({
+          where: {
+            sh_cmp_seq: s.shipmentCmpSeq,
+            sh_code: s.shipmentCode,
+            sh_ss_code: s.currentStatusCode,
+          },
+          data: {
+            ...(changes.eta && { sh_eta: changes.eta }),
+            ...(s.newStatusCode && { sh_ss_code: s.newStatusCode }),
+          }
+        });
+
+        if(result.count !== 1) throw new ShipmentChangedError();
+      }
+    });
+
+    return true;
+  } catch (error){
+    if(error instanceof ShipmentChangedError) return false;
+    throw error;
+  }
+
+}
+
+
+
+
+

@@ -264,9 +264,9 @@ paths:
 
         shipmentCode and shipmentCmpSeq. Every other shipment with the
 
-        same bill of lading is updated too. Status only moves forward
+        same bill of lading is updated too. Status can be set to Shipped,
 
-        (Shipped, then Transit, then Arrived); shipments that are Received,
+        Transit or Arrived in any order; shipments that are Received,
 
         Closed or Cancelled are never changed. Shipments on the same
 
@@ -1685,15 +1685,11 @@ components:
 
             - Locked
 
-            - Backwards
-
             - StatusNotAvailable
 
           description: >
 
             Locked means the shipment is Received, Closed or Cancelled.
-
-            Backwards means the new status is behind the current one.
 
             StatusNotAvailable means the status does not exist for
 
