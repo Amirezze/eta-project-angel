@@ -398,9 +398,23 @@ paths:
 
       description: >
 
-        Returns shipments that meet the conditions required
+        Returns shipments that can be tracked with the container
 
-        for container tracking.
+        tracking service. A shipment is eligible when it has a
+
+        container number in the standard format (4 letters followed
+
+        by 7 digits) and one of the tracked shipping lines (CMA,
+
+        Maersk, Hapag, MSC), and its status is either Shipped or
+
+        Transit, or Open, Open GRP or empty with a bill of lading.
+
+        Arrived, Received, Closed and Cancelled shipments are never
+
+        returned. Each shipment is listed separately, even when
+
+        several shipments share the same container.
 
       operationId: getEligibleShipmentsForTracking
 
@@ -1283,6 +1297,8 @@ components:
 
           type: string
 
+          description: Trimmed and in capital letters
+
           example: MEDU1234567
 
 
@@ -1313,7 +1329,9 @@ components:
 
           nullable: true
 
-          example: In Transit
+          description: The shipment's ERP status (empty when it has none)
+
+          example: Shipped
 
 
 
