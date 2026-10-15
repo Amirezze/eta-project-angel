@@ -26,13 +26,9 @@ function toDateString(date: Date | null) {
     return date ? date.toISOString().slice(0, 10) : null;
 }
 
-// The ERP stores unfilled text fields as "" (or spaces); the API returns null.
 function emptyToNull(value: string | null) {
     return value?.trim() ? value.trim() : null;
 }
-
-
-
 
 
 export async function getArrivedShipmentsSummary(): Promise<ArrivedShipment[]> {
@@ -112,5 +108,8 @@ export async function getArrivedShipmentsSummary(): Promise<ArrivedShipment[]> {
 
     return result;
 }
+
+
+
 
 
