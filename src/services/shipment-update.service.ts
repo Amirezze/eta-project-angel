@@ -12,6 +12,12 @@ import type {
   UpdatedShipmentSummary,
   UpdateShipmentResult,
 } from "@/types/ShipmentUpdate";
+import {
+  IN_TRANSIT_STATUSES,
+  LOCKED_STATUSES,
+  PRE_SHIPMENT_STATUSES,
+  normalize,
+} from "@/services/shipment-status";
 
 // Request status → ERP code (lowercase; compared case-insensitively)
 const TRACKING_STATUS_CODES = {
@@ -21,20 +27,16 @@ const TRACKING_STATUS_CODES = {
 } as const;
 
 // Statuses this endpoint may change, in any direction.
-// A shipment with no status counts as Open.
-const UPDATABLE_STATUSES = new Set(["ope", "grp", "shi", "tra", "arr"]);
-
-// Set by people in the ERP; never changed by this endpoint.
-const LOCKED_STATUSES = new Set(["rec", "clo", "can"]);
+const UPDATABLE_STATUSES = new Set([
+  ...PRE_SHIPMENT_STATUSES,
+  ...IN_TRANSIT_STATUSES,
+  "arr",
+]);
 
 export type UpdateOutcome =
   | { kind: "not-found" }
   | { kind: "conflict"; message: string }
   | { kind: "updated"; result: UpdateShipmentResult };
-
-function normalize(code: string | null) {
-  return code?.trim().toLowerCase() || null;
-}
 
 function checkShipment(
   currentCode: string | null,
@@ -151,3 +153,5 @@ export async function updateShipmentTrackingInformation(
     },
   };
 }
+
+

@@ -167,7 +167,45 @@ export async function updateShipmentTracking(
 
 }
 
+type TrackableFilter = {
+  inTransitStatuses: string[];   // tracked whatever the BL
+  preShipmentStatuses: string[]; // tracked only with a BL (no status counts too)
+  shippingLineCodes: string[];   // udf10 values of the tracked lines
+};
 
 
+export async function getTrackableShipments(filter: TrackableFilter) {
 
+  return  prisma.fm_c_shipment.findMany({
+    where : {
+      OR : [
+        {sh_ss_code: {in: filter.inTransitStatuses}},
+        {
+          OR: [
+            {sh_ss_code: null},
+            {sh_ss_code: { in : filter.preShipmentStatuses}}
+          ],
+          sh_despacte: { not: null},
+        },
+      ],
+      fm_c_shipmentudf: {
+        is: {
+          udf10: { in: filter.shippingLineCodes},
+          udf5: { not: null},
+        },
+      },
+    },
+
+    select: {
+      sh_code: true,
+      sh_cmp_seq: true,
+      sh_despacte: true,
+      sh_ss_code: true,
+      sh_eta: true,
+      im_shstatus : { select : { ss_description: true}},
+      fm_c_shipmentudf : { select: {udf5: true, udf10: true}},
+    },
+  });
+
+}
 

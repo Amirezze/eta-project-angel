@@ -24,3 +24,4 @@ export interface UpdateShipmentResult {
     updatedShipments: UpdatedShipmentSummary[];
     skippedShipments: SkippedShipment[];
 }
+

@@ -26,3 +26,22 @@ export async function getLatestSuccessfulTrackingCheck(
     select: { checkedAt: true },
   });
 }
+
+
+export async function getLatestSuccessfulCheckDates(
+  shipments: { shipmentCode: string, shipmentCmpSeq: number}[]
+) {
+  if(shipments.length === 0) return [];
+  
+  return appPrisma.trackingCheck.groupBy({
+    by: ["shipmentCode", "shipmentCmpSeq"],
+    where: {
+      success: true,
+      OR: shipments.map((s) => ({
+        shipmentCode: s.shipmentCode,
+        shipmentCmpSeq: s.shipmentCmpSeq,
+      })),
+    },
+    _max: {checkedAt: true},
+  });
+}
